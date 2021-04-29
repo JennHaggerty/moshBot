@@ -19,7 +19,7 @@ async function main() {
 	var urls = makeUrls(boards, whiteList);
     var events = await getData(urls);
 	var eventDetails = cleanData(events);
-	var email = prepareEmail(eventDetails)
+	var email = prepareEmail(eventDetails);
 	console.log(email);
 }
 main();
@@ -31,8 +31,7 @@ function prepareEmail(events) {
 	`;
 	events.forEach(event => {
 		var date = new Date(event.startDate);
-		message = 
-			message + 
+		message =  message + 
 			event.name + " " +
 			date + " " + 
 			event.local + " " + 
