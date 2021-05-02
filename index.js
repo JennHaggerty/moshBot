@@ -1,43 +1,57 @@
-/*
-var base64 		= require('base-64');
-var nodemailer  = require('nodemailer');
-var password 	= config.password;
-password 		= base64.decode(password);
-*/
+var axios 		= require('axios');
+var nodemailer	= require('nodemailer');
 var config 		= require('./config');
 var boards 		= config.eventBoards;
-var whiteList 	= config.whiteList;
-var axios 	= require('axios');
+var whiteList	= config.whiteList;
 
-// if PASSWORD env.var is missing, exit the program
 if(!config) {
   console.log("You need a config/ file!");
   process.exit(1);
 }
+main().catch(console.error);
 
 async function main() {
 	var urls = makeUrls(boards, whiteList);
-    var events = await getData(urls);
+	var events = await getData(urls);
+	if (events.length < 1) { return; }
 	var eventDetails = cleanData(events);
-	var email = prepareEmail(eventDetails);
-	console.log(email);
+	var message = prepareMessage(eventDetails);
+	sendEmail(message);
 }
-main();
 
-function prepareEmail(events) {
-	var message = `
-	Hey, 
-	MoshBot found some concerts:
-	`;
+function sendEmail(textMessage){
+	var transporter = nodemailer.createTransport({
+		service: 'gmail',
+		auth: {
+		  user: config.email,
+		  pass: config.password
+		}
+	  });
+	  
+	  var mailOptions = {
+		from: "Moshbot 👻 " + config.email,
+		to: config.email,
+		subject: "MoshBot found some concerts!",
+		text: textMessage
+	  };
+	  
+	  transporter.sendMail(mailOptions, function(error, info){
+		if (error) {
+		  console.log(error);
+		} else {
+		  console.log('Email sent: ' + info.response);
+		}
+	  });
+}
+function prepareMessage(events) {
+	var message = `Ready the battle dress: `;
 	events.forEach(event => {
 		var date = new Date(event.startDate);
-		message =  message + 
-			event.name + " " +
-			date + " " + 
-			event.local + " " + 
-			event.url + 
-			" <a href='" + event.url + "'>Tickets</a>"
-			" | ";
+		message =  message + "\n" +s 
+			event.name + "\n" +
+			date + "\n" + 
+			event.location + "\n" + 
+			event.url + "\n\n"
 		;
 	});
 	return message;
@@ -45,12 +59,13 @@ function prepareEmail(events) {
 function cleanData(jsonArr) {
 	var eventDetails = [];
 	jsonArr.forEach(json => {
-		var venue = json._embedded.venues;
-		var newJson = {};
-		newJson.name = json.name;
-		newJson.url = json.url;
-		newJson.startTime = json.dates.start.localTime;
-		newJson.startDate = json.dates.start.localDate;
+		var venue 			= json._embedded.venues[0];
+		var newJson 		= {};
+		newJson.name		= json.name;
+		newJson.location 	= venue.city['name'] + "," + venue.state["stateCode"];
+		newJson.url 		= json.url;
+		newJson.startTime 	= json.dates.start.localTime;
+		newJson.startDate 	= json.dates.start.localDate;
 		
 		eventDetails.push(newJson);
 	});
@@ -61,10 +76,12 @@ async function getData(urls) {
 	for (x = 0; x < urls.length; x++) {
 		try {
 			const response = await axios.get(urls[x]);
-			var eventsArr = response.data._embedded.events;
-			eventsArr.forEach(event => {
-				events.push(event)
-			});
+			if (response.status == 200 &&  response.data._embedded.events != undefined) {
+				var eventsArr = response.data._embedded.events;
+				eventsArr.forEach(event => {
+					events.push(event)
+				});
+			}
 		} catch (error) {
 			console.log(error);
 		}
