@@ -32,18 +32,8 @@ function makeEndpoints(boards, whiteList) {
 	});
 	return endpoints;
 }
-async function useAxios(url) {
-	try {
-		const {data:response} = await axios.get(url);
-		console.log(response.status)
-    return response
-	} catch (error) {
-		console.log(error.toString());
-	}
-}
 async function getData(endpoints) {
 	let data = [];
-	let k = 0;
 	for (i = 0; i < endpoints.length; i ++) {
 		let url = endpoints[i];
 		axios.get(url).then(res => {
@@ -54,23 +44,6 @@ async function getData(endpoints) {
 		})
 		await sleep(1000);
 	}
-	/*
-	for (i = 0; i < endpoints.length; i += 5) {
-		let arrChunk = endpoints.slice(i, i + 5);
-		for (j = 0; j < arrChunk.length; j++) {
-			let url = arrChunk[j];
-			axios.get(url).then(res => {
-				console.log(res.status);
-			})
-			.catch(err => {
-				console.log(err.toString());
-			})
-			await sleep(1000);
-		}
-		k++;
-		console.log(i);
-	}
-	*/
 }
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -129,28 +102,3 @@ function sendEmail(textMessage){
 		}
 	  });
 }
-
-
-/*async function getData(endpoints) {
-	let events = [];
-	for (x = 0; x < endpoints.length; x++) {
-		try {
-			let response = await axios.get(endpoints[x], {timeout: 200});
-			//console.log(response);
-			if (	response.status == 200 && 
-						response.data.hasOwnProperty('_embedded') && 
-						response.data._embedded.hasOwnProperty('events')
-					) {
-				let eventsArr = response.data._embedded.events;
-				eventsArr.forEach(event => {
-					events.push(event)
-				});
-			}
-		} catch (error) {
-			console.log(error);
-		}
-	}
-	console.log(events);
-	return events;
-}
-*/
