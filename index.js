@@ -1,10 +1,11 @@
-const axios           = require('axios');
-const nodemailer		 	= require('nodemailer');
-const config 					= require('./config');
-var boards 						= config.eventBoards;
-var whiteList					= config.whiteList;
-var email 						= config.email;
-var password 					= config.password;
+const axios = require('axios');
+const nodemailer = require('nodemailer');
+const config = require('./config');
+const fs = require('fs');
+var boards = config.eventBoards;
+var whiteList = config.whiteList;
+var email = config.email;
+var password = config.password;
 
 if(!config) {
   console.log("You need a config/ file!");
@@ -40,7 +41,10 @@ async function getData(endpoints) {
 				data.push(json);
 			}
 		})
-		.catch(err => { console.log(err.toString()); })
+		.catch(err => { 
+			fs.writeFile('./err_log.txt', "getData(): " + err.toString(), { flag: 'a+' });
+
+		})
 		await sleep(1000);
 	}
 	return data;
@@ -79,12 +83,12 @@ function sendEmail(textMessage){
 	var mailOptions = {
 		from: "Moshbot 🤘 " + email,
 		to: email,
-		subject: "MoshBot found some concerts",
+		subject: "Ready the battle dress",
 		text: textMessage
 	};
 	transporter.sendMail(mailOptions, function(error, info){
-		if (error) { console.log(error); } 
-		else { console.log('Email sent: ' + info.response); }
+		if (error)
+		fs.writeFile('./err_log.txt', "sendMail(): " + err.toString(), { flag: 'a+' });
 	});
 }
 function sleep(ms) {
